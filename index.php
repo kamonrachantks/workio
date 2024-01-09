@@ -56,26 +56,6 @@ if ($mode == "chklogin") {
 	<link rel="stylesheet" type="text/css" href="css/util.css">
 	<link rel="stylesheet" type="text/css" href="css/main.css">
 <!--===============================================================================================-->
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,300&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .limiter {
-            flex-direction: column;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        .container-login100 {
-            flex-direction: column;
-            font-family: 'Roboto', sans-serif;
-        }
-
-        /* Add more styles for other elements as needed */
-    </style>
 
 </head>
 <body>
