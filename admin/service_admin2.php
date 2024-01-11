@@ -93,8 +93,7 @@ $stmtList->execute();
                                     <div class="cont-details">
                                         <div class="table-content table-responsive cart-table-content m-t-30">
                                             <div style="padding-top: 30px;">
-                                                <h4 style="padding-bottom: 20px;text-align: center;color: #5c6bc0 ;">ประวัติปรับปรุงเวลา
- </h4>
+                                                <h4 style="padding-bottom: 20px;text-align: center;color: #5c6bc0 ;">ประวัติปรับปรุงเวลา</h4>
                                                 <div>
                                                     <div style="padding-top: 10px;">
                                                         <form method="post">
