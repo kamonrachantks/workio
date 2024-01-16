@@ -30,7 +30,8 @@
                 <?php } ?>
 
                 <?php if (isset($_SESSION['p_id']) && $_SESSION['p_id'] > 0) { ?>
-            
+                    <a href="service.php" class="nav-item nav-link ">ลงเวลา</a>
+                    <a href="service02.php" class="nav-item nav-link ">ประวัติลงเวลา</a>
                     <a href="logout.php" class="nav-item nav-link active">ออกจากระบบ</a>
                 <?php } ?>
             </div>

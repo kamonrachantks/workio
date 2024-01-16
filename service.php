@@ -205,32 +205,8 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
                             </div>
                         </div>
                     </form>
-
-                    <h5 class="text-center mt-4">ตารางลงเวลา <?php echo $rowm['p_name']; ?></h5>
-                    <?php
-                    $querylist = "SELECT * FROM tb_hr_work_io WHERE p_id = $u_id ORDER BY workdate DESC";
-                    $resultlist = $conn->query($querylist);
                     
-                    echo "
-                    <table class='table table-bordered table-striped table-success mt-2'>
-                    <thead>
-                    <tr class='table-success'>
-                    <td>วันที่</td>
-                    <td>เวลาเข้างาน</td>
-                    <td>เวลาออกงาน</td>
-                    </tr>
-                    </thead>
-                    ";
-
-                    foreach ($resultlist as $value) {
-                        echo "<tr>";
-                        echo "<td>" . $value["workdate"] .  "</td> ";
-                        echo "<td>" . $value["workin"] .  "</td> ";
-                        echo "<td>" . $value["workout"] .  "</td> ";
-                        echo "</tr>";
-                    }
-                    echo '</table>';
-                    ?>
+                
                 </div>
             </div>
         </div>

@@ -151,9 +151,9 @@ if (isset($_POST["workin"])) {
         $profileData = $selectStmt->fetch(PDO::FETCH_ASSOC);
 
         if ($result) {
-            $strWorkout = "ลงเวลาออก\nชื่อ: " . $profileData['p_name'] . "\nเวลาเข้า: " . $workin . "\nเวลาออก: " . $workout . "\nวันที่: " . $workdate;
-            $resWorkout = notify_message($strWorkout, $token);
-            print_r($resWorkout);
+            //$strWorkout = "ลงเวลาออก\nชื่อ: " . $profileData['p_name'] . "\nเวลาเข้า: " . $workin . "\nเวลาออก: " . $workout . "\nวันที่: " . $workdate;
+            //$resWorkout = notify_message($strWorkout, $token);
+            //print_r($resWorkout);
             
             // Display success alert and redirect
             echo "<script type='text/javascript'>";

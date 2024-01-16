@@ -24,13 +24,14 @@
         </button>
         <div class="collapse navbar-collapse" id="navbarCollapse">
             <div class="navbar-nav ms-auto">
-                <a href="index.php" class="nav-item nav-link ">หน้าแรก</a>
                 
                 <?php if (!isset($_SESSION['p_id']) || $_SESSION['p_id'] == 0) { ?>
                     <a href="login.php" class="nav-item nav-link active">เข้าสู่ระบบ</a>
                 <?php } ?>
 
                 <?php if (isset($_SESSION['p_id']) && $_SESSION['p_id'] > 0) { ?>
+                    <a href="index.php" class="nav-item nav-link ">ลงเวลา</a>
+                    <a href="service02.php" class="nav-item nav-link ">ประวัติลงเวลา</a>
                     <a href="service.php" class="nav-item nav-link ">รายการอนุมัติ </a>
                     <a href="logout.php" class="nav-item nav-link active">ออกจากระบบ</a>
                 <?php } ?>
