@@ -55,7 +55,9 @@ if (!$result_mac_check) {
 
 $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
 
+
 ?>
+
 
 <!DOCTYPE html>
 <html lang="en">
@@ -70,6 +72,12 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
     <title>ระบบบันทึกเวลาการทำงาน</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@1,300&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11">
+     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
     <style>
         .dashboard-container {
@@ -110,6 +118,7 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
         margin: 0;
         display: flex;
         flex-direction: column;
+        font-family: 'Roboto', sans-serif;
     }
 
     .wrapper {
@@ -135,9 +144,9 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
             <div class="col-sm-8 mx-auto mt-4">
                 <div class="form-group row">
                 <h3> ลงเวลาเข้า-ออกงาน <?php echo date('d-m-Y');?></h3>
-                    <form id="workForm" action="save.php" method="post" class="form-horizontal">
+                    <form id="workForm" method="post" class="form-horizontal">
 
-                        <input type="hidden" name="p_id" id="p_id">
+                        <input type="hidden" name="p_id" id="p_id">                        
                         <input type="hidden" name="latitude" id="latitude">
                         <input type="hidden" name="longitude" id="longitude">
                         <input type="hidden" name="ip_address" id="ip_address" value="<?php echo $_SERVER['REMOTE_ADDR'];?>">
@@ -168,7 +177,7 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
                                     }
 
                                     if ($mac_exists) {
-                                        echo '<input type="hidden" class="form-control" name="mac_matches" value="NULL">';
+                                        echo '<input type="hidden" class="form-control" name="mac_matches" value="">';
                                         
                                     } else {
                                         echo '<label for="p_id">กรอกเหตุผลที่ใช่เครื่องเดียวกันคนอื่น</label>';
@@ -194,11 +203,11 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
                             </div>
                             <div class="col col-sm-1">
                                 <label>-</label>
-                                <button class="btn btn-primary" onclick="getLocation() ,submitForm()">บันทึก</button>
+                                <button type="button" class="btn btn-primary" onclick="getLocation(); submitForm();">บันทึก</button>
                             </div>
                         </div>
                     </form>
-
+                    
                 
                 </div>
             </div>
@@ -208,6 +217,8 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
     <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
 
     <script>
         const x = document.getElementById("demo");
@@ -221,13 +232,57 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
         }
 
         function showPosition(position) {
-            // Set latitude and longitude values in the hidden input fields
-            document.querySelector('#latitude').value = position.coords.latitude;
-            document.querySelector('#longitude').value = position.coords.longitude;
-        }
+    // Set latitude and longitude values in the hidden input fields
+    document.querySelector('#latitude').value = position.coords.latitude;
+    document.querySelector('#longitude').value = position.coords.longitude;
+}
 
-        getLocation();
-    </script>
+getLocation();
+
+document.getElementById("saveButton").addEventListener("click", function() {
+    submitForm();
+});
+
+function submitForm() {
+    // Gather form data
+    var formData = $("#workForm").serialize();
+
+    // AJAX request
+    $.ajax({
+        type: "POST",
+        url: "save.php",
+        data: formData,
+        dataType: "json",
+        success: function (response) {
+    if (response.status === 'success') {
+        // Show SweetAlert2 success message
+        Swal.fire({
+            icon: 'success',
+            title: 'Success',
+            text: response.message,
+        }).then((result) => {
+            // Redirect if needed
+            if (response.redirect) {
+                window.location.href = response.redirect;
+            }
+        });
+    } else {
+        // Show SweetAlert2 error message
+        Swal.fire({
+            icon: 'error',
+            title: 'Error',
+            text: response.message,
+        });
+    }
+},
+
+    });
+}
+
+
+
+</script>
+
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
@@ -237,6 +292,5 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
 </body>
 
 
-    <?php include_once('footer.php'); ?>
 
 </html>

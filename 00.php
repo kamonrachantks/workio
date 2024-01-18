@@ -76,6 +76,10 @@ if (isset($_POST["workin"])) {
             $query = "INSERT INTO tb_hr_mac_ad (p_id, mac_address) VALUES (?, ?)";
             $stmt = $conn->prepare($query);
             $result = $stmt->execute([$p_id, $mac_address]);
+
+            if (!$result) {
+                throw new Exception("การดำเนินการคิวรี SQL ล้มเหลว.");
+            }
         }
 
         // Insert into tb_hr_work_io
@@ -83,26 +87,30 @@ if (isset($_POST["workin"])) {
         $stmt = $conn->prepare($query);
         $result = $stmt->execute([$workdate, $p_id, $workin, $latitude, $longitude, $ip_address, $mac_address, $annotation, $mac_matches, $w_status]);
         
-        if ($result) {      
-            
+        if ($result) {
+            // ดึงข้อมูลชื่อผู้ใช้จาก tb_hr_profile
             $selectQuery = "SELECT p_name FROM tb_hr_profile WHERE p_id = ?";
             $selectStmt = $conn->prepare($selectQuery);
             $selectStmt->execute([$p_id]);
             $profileData = $selectStmt->fetch(PDO::FETCH_ASSOC);
-    
-            $str = "ลงเวลาเข้า\nชื่อ: " . $profileData['p_name'] . "\nเวลาเข้า: " . $workin . "\nวันที่: " . $workdate;
-            $res = notify_message($str, $token);
 
-            
+            if ($profileData) {
+
+ 
+                $str = "ลงเวลาเข้า\nชื่อ: " . $profileData['p_name'] . "\nเวลาเข้า: " . $workin . "\nวันที่: " . $workdate;
+                $res = notify_message($str, $token);
+                print_r($res);
+
                 $response['status'] = 'success';
                 $response['message'] = 'บันทึกข้อมูลสำเร็จ' ;
-                $response['redirect'] = 'index.php';
+                $response['redirect'] = 'service.php';
                 echo json_encode($response);
-     
+            } else {
+                throw new Exception("การดึงข้อมูลโปรไฟล์ล้มเหลว.");
+            }
         } else {
             throw new Exception("การดำเนินการคิวรี SQL ล้มเหลว.");
         }
-
     } catch (Exception $e) {
         $response['message'] = 'Error: ' . $e->getMessage();
         echo json_encode($response);
@@ -141,7 +149,7 @@ if (isset($_POST["workin"])) {
         if ($result) {
             $response['status'] = 'success';
             $response['message'] = 'บันทึกข้อมูลสำเร็จ';
-            $response['redirect'] = 'index.php';
+            $response['redirect'] = 'service.php';
             echo json_encode($response);
         } else {
             throw new Exception("การดำเนินการคิวรี SQL ล้มเหลว.");

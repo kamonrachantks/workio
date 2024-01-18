@@ -6,14 +6,14 @@ $u_id = $_SESSION['p_id'];
 $query = new SCDB();
 
 // Redirect to the login page if session variables are not set
-if ((!isset($_SESSION['USER_NO'])) || ($_SESSION['USER_NO'] == '')) {
+if (!isset($_SESSION['USER_NO']) || $_SESSION['USER_NO'] == '') {
     header("location: login.php");
     exit();
 }
 
 // Add this code before preparing the SQL statement
 $searchCondition = "";
-$searchTerm = ""; // Initialize $searchTerm variable
+$searchTerm = "";
 
 if (isset($_POST['search']) && !empty($_POST['search'])) {
     $searchTerm = $_POST['search'];
@@ -24,7 +24,7 @@ if (isset($_POST['search']) && !empty($_POST['search'])) {
 $dateSearchCondition = "";
 $dateSearchTerm = "";
 if (isset($_POST['date_search']) && !empty($_POST['date_search'])) {
-    $dateSearchTerm = date('Y-m-d', strtotime($_POST['date_search'])); // Convert to 'Y-m-d' format
+    $dateSearchTerm = date('Y-m-d', strtotime($_POST['date_search']));
     $dateSearchCondition .= " AND w.workdate = :dateSearchTerm";
 }
 
@@ -54,6 +54,15 @@ if (!empty($dateSearchTerm)) {
 }
 
 $stmtList->execute();
+
+$offset = ($page - 1) * $recordsPerPage;
+
+// Initialize $nextPage and $prevPage
+$nextPage = $page + 1;
+$prevPage = $page - 1;
+
+
+
 ?>
 
 <!DOCTYPE html>
@@ -94,70 +103,61 @@ $stmtList->execute();
                                         <div class="table-content table-responsive cart-table-content m-t-30">
                                             <div style="padding-top: 30px;">
                                                 <h4 style="padding-bottom: 20px;text-align: center;color: #5c6bc0 ;">รายการมาสาย </h4>
-                                                <div>
-                                                    <div style="padding-top: 10px;">
-                                                        <form method="post">
-                                                            <label for="search">ค้นหา :</label>
-                                                            <input type="text" name="search" id="search" placeholder="กรอกรหัสพนักงาน">
-                                                            <label for="date_search">ค้นหาจากวันที่ :</label>
-                                                            <input type="date" name="date_search" id="date_search">
-                                                            <button type="submit" class="btn btn-primary">ค้นหา</button>
-                                                        </form>
-                                                    </div>
-                                                    <?php 
-                                                    $nextPage = $page + 1;
-                                                    $prevPage = $page - 1;
-                                                    
-                                                    echo '<div style="padding-top: 30px;">';
-                                                    echo '<table border="2" class="table">';
-                                                    echo '<thead class="gray-bg">';
-                                                    echo '<tr>';
-                                                    echo '<th>ลำดับ</th>';
-                                                    echo '<th>Id</th>';
-                                                    echo '<th>ชื่อ</th>';
-                                                    echo '<th>เวลาเข้างาน</th>';
-                                                    echo '<th>เวลาออกงาน</th>';
-                                                    echo '<th>วันที่</th>';
-                                                    echo '<th>สถานะ</th>';
-                                                    echo '<th>Action</th>';
-                                                    echo '</tr>';
-                                                    echo '</thead>';
-                                                    echo '<tbody>';
-                                                    
-                                                    $cnt = 1;
-                                                    while ($row = $stmtList->fetch(PDO::FETCH_ASSOC)) {
-                                                        echo '<tr>';
-                                                        echo '<td>' . $cnt . '</td>';
-                                                        echo '<td>' . $row['p_id'] . '</td>';
-                                                        echo '<td>' . $row['p_name'] . '</td>';
-                                                        echo '<td><p>' . $row['workin'] . '</p></td>';
-                                                        echo '<td>' . $row['workout'] . '</td>';
-                                                        echo '<td>' . $row['workdate'] . '</td>';
-                                                        echo '<td>' . ($row['w_status'] == '1' ? 'มาสาย' : '') . '</td>';
-                                                        echo '<td>';
-                                                        echo '<button class="btn btn-primary" onclick="confirmAction(' . $row['w_id'] . ')">ปรับเปลี่ยนเวลา</button>';
-                                                        // echo '<button class="btn btn-secondary" onclick="cancelAction(' . $row['w_id'] . ')">ยกเลิก</button>';
-                                                        echo '</td>';
-                                                        echo '</tr>';
-                                                        $cnt = $cnt + 1;
-                                                    }
-                                                    
-                                                    echo '</tbody>';
-                                                    echo '</table>';
-                                                    echo '</div>';
-                                                    
-                                                    // Display pagination links
-                                                    echo '<div style="padding-top: 10px;">';
-                                                    echo '<ul class="pagination">';
-                                                    if ($page > 1) {
-                                                        echo '<li><a href="?page=' . $prevPage . '">Previous</a></li>';
-                                                    }
-                                                    echo '<li><a href="?page=' . $nextPage . '">Next</a></li>';
-                                                    echo '</ul>';
-                                                    echo '</div>';
-                                                    ?>
-                                                    
-                                                    </div>
+                                                <div style="padding-top: 10px;">
+                                                    <form method="post">
+                                                        <label for="search">ค้นหา :</label>
+                                                        <input type="text" name="search" id="search" placeholder="กรอกรหัสพนักงาน">
+                                                        <label for="date_search">ค้นหาจากวันที่ :</label>
+                                                        <input type="date" name="date_search" id="date_search">
+                                                        <button type="submit" class="btn btn-primary">ค้นหา</button>
+                                                    </form>
+                                                </div>
+                                                <div style="padding-top: 30px;">
+                                                    <table border="2" class="table">
+                                                        <thead class="gray-bg">
+                                                            <tr>
+                                                                <th>ลำดับ</th>
+                                                                <th>Id</th>
+                                                                <th>ชื่อ</th>
+                                                                <th>เวลาเข้างาน</th>
+                                                                <th>เวลาออกงาน</th>
+                                                                <th>วันที่</th>
+                                                                <th>สถานะ</th>
+                                                                <th>Action</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <?php
+                                                            $cnt = 1;
+                                                            while ($row = $stmtList->fetch(PDO::FETCH_ASSOC)) {
+                                                                echo '<tr>';
+                                                                echo '<td>' . $cnt . '</td>';
+                                                                echo '<td>' . $row['p_id'] . '</td>';
+                                                                echo '<td>' . $row['p_name'] . '</td>';
+                                                                echo '<td><p>' . $row['workin'] . '</p></td>';
+                                                                echo '<td>' . $row['workout'] . '</td>';
+                                                                echo '<td>' . $row['workdate'] . '</td>';
+                                                                echo '<td>' . ($row['w_status'] == '1' ? 'มาสาย' : '') . '</td>';
+                                                                echo '<td>';
+                                                                echo '<button class="btn btn-primary" onclick="confirmAction(' . $row['w_id'] . ')">ปรับเปลี่ยนเวลา</button>';
+                                                                // echo '<button class="btn btn-secondary" onclick="cancelAction(' . $row['w_id'] . ')">ยกเลิก</button>';
+                                                                echo '</td>';
+                                                                echo '</tr>';
+                                                                $cnt = $cnt + 1;
+                                                            }
+                                                            ?>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                                <div style="padding-top: 10px;">
+                                                    <ul class="pagination">
+                                                        <?php
+                                                        if ($page > 1) {
+                                                            echo '<li><a href="?page=' . $prevPage . '">Previous</a></li>';
+                                                        }
+                                                        echo '<li><a href="?page=' . $nextPage . '">Next</a></li>';
+                                                        ?>
+                                                    </ul>
                                                 </div>
                                             </div>
                                         </div>
@@ -172,69 +172,82 @@ $stmtList->execute();
         <!-- End About Section -->
 
         <!-- JavaScript Dependencies -->
-<!-- JavaScript Dependencies -->
-<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-<script type="text/javascript" src="js/bootstrap.js"></script>
-<script type="text/javascript" src="js/custom.js"></script>
-<script>
-    function confirmAction(workId) {
-        $.ajax({
-            type: "POST",
-            url: "update_status.php",
-            data: {
-                w_id: workId,
-                new_status: 2
-            },
-            success: function (response) {
-                // Update w_status to 0 (or any other desired value)
-                updateWStatus(workId);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error updating status: " + error);
-                alert("An error occurred while updating status. Please try again.");
+        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.js"></script>
+        <script type="text/javascript" src="js/custom.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@10"></script>
+        <script>
+            function confirmAction(workId) {
+                $.ajax({
+                    type: "POST",
+                    url: "update_status.php",
+                    data: {
+                        w_id: workId,
+                        new_status: 2
+                    },
+                    success: function (response) {
+                        updateWStatus(workId);
+                    },
+                    error: function (xhr, status, error) {
+                        handleError("Error updating status: " + error);
+                    }
+                });
             }
-        });
-    }
 
-    function updateWStatus(workId) {
-        $.ajax({
-            type: "POST",
-            url: "update_w_status.php", // Create a new PHP file for updating w_status
-            data: {
-                w_id: workId,
-                new_w_status: 2
-            },
-            success: function (response) {
-                // Remove annotation
-                removeAnnotation(workId);
-            },
-            error: function (xhr, status, error) {
-                console.error("Error updating w_status: " + error);
-                alert("An error occurred while updating w_status. Please try again.");
+            function updateWStatus(workId) {
+                $.ajax({
+                    type: "POST",
+                    url: "update_w_status.php",
+                    data: {
+                        w_id: workId,
+                        new_w_status: 2
+                    },
+                    success: function (response) {
+                        removeAnnotation(workId);
+                    },
+                    error: function (xhr, status, error) {
+                        handleError("Error updating w_status: " + error);
+                    }
+                });
             }
-        });
-    }
 
-    function removeAnnotation(workId) {
-        $.ajax({
-            type: "POST",
-            url: "remove_annotation.php", // Create a new PHP file for removing annotation
-            data: {
-                w_id: workId
-            },
-            success: function (response) {
-                alert("Status, w_status, and annotation updated successfully!");
-                location.reload();
-            },
-            error: function (xhr, status, error) {
-                console.error("Error removing annotation: " + error);
-                alert("An error occurred while removing annotation. Please try again.");
+            function removeAnnotation(workId) {
+                $.ajax({
+                    type: "POST",
+                    url: "remove_annotation.php",
+                    data: {
+                        w_id: workId
+                    },
+                    success: function (response) {
+                        handleSuccess("Status, w_status, and annotation updated successfully!");
+                    },
+                    error: function (xhr, status, error) {
+                        handleError("Error removing annotation: " + error);
+                    }
+                });
             }
-        });
-    }
-</script>
 
+            function handleError(errorMessage) {
+                console.error(errorMessage);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: 'An error occurred. Please try again.',
+                });
+            }
 
+            function handleSuccess(successMessage) {
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success!',
+                    text: successMessage,
+                }).then((result) => {
+                    if (result.isConfirmed || result.isDismissed) {
+                        location.reload();
+                    }
+                });
+            }
+        </script>
 
     </div>
 </body>

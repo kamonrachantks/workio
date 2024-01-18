@@ -177,7 +177,7 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
                                     }
 
                                     if ($mac_exists) {
-                                        echo '<input type="hidden" class="form-control" name="mac_matches" value="">';
+                                        echo '<input type="hidden" class="form-control" name="mac_matches" value="1">';
                                         
                                     } else {
                                         echo '<label for="p_id">กรอกเหตุผลที่ใช่เครื่องเดียวกันคนอื่น</label>';
@@ -276,6 +276,14 @@ function submitForm() {
     }
 },
 
+        error: function () {
+            // Show SweetAlert2 generic error message
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'An error occurred during the request.',
+            });
+        }
     });
 }
 
@@ -292,5 +300,6 @@ function submitForm() {
 </body>
 
 
+    <?php include_once('footer.php'); ?>
 
 </html>

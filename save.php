@@ -2,13 +2,13 @@
 session_start();
 
 $serverName = "LAPTOP-FIIPHBAB";
-$uid = "";  // Replace with your SQL Server username
-$pwd = "";  // Replace with your SQL Server password
+$uid = "";  // แทนที่ด้วยชื่อผู้ใช้ SQL Server ของคุณ
+$pwd = "";  // แทนที่ด้วยรหัสผ่าน SQL Server ของคุณ
 $DB = "Domc_TEST";
 
 define('LINE_API', "https://notify-api.line.me/api/notify");
 
-$token = "Y3zH1oQp4rVu0Wx4wINmhNzy5wCwpVwCv5Dp8kfVkkI"; // Replace with your Line Notify token
+$token = "Y3zH1oQp4rVu0Wx4wINmhNzy5wCwpVwCv5Dp8kfVkkI"; // แทนที่ด้วย Token ของ Line Notify ของคุณ
 
 function notify_message($message, $token) {
     $queryData = array('message' => $message);
@@ -32,12 +32,14 @@ try {
     $conn = new PDO("sqlsrv:server=$serverName;Database=$DB", $uid, $pwd);
     $conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 } catch (Exception $e) {
-    die("Database connection failed: " . $e->getMessage());
+    die("การเชื่อมต่อฐานข้อมูลล้มเหลว: " . $e->getMessage());
 }
 
-if (!$conn) {
-    die(print_r(sqlsrv_errors(), true));
-}
+$response = [
+    'status' => '',
+    'message' => '',
+    'redirect' => '',
+];
 
 if (isset($_POST["workin"])) {
     try {
@@ -58,12 +60,9 @@ if (isset($_POST["workin"])) {
         $distance = calculateHaversineDistance($latitude, $longitude, $centerLatitude, $centerLongitude);
 
         if ($distance > 50) {
-            // Redirect if not within the specified area
-            echo "<script type='text/javascript'>";
-            echo "alert('คุณไม่ได้อยู่ในพื้นที่');";
-            echo "window.location = 'service.php'; ";
-            echo "</script>";
-            exit(); // Stop further execution
+            $response['message'] = 'คุณไม่ได้อยู่ในพื้นที่';
+            echo json_encode($response);
+            exit();
         }
 
         // Check if mac_address exists in tb_hr_mac_ad and is not duplicated
@@ -78,53 +77,45 @@ if (isset($_POST["workin"])) {
             $stmt = $conn->prepare($query);
             $result = $stmt->execute([$p_id, $mac_address]);
 
-            if (!$result) {
-                throw new Exception("Error executing SQL query.");
-            }
         }
+
 
         // Insert into tb_hr_work_io
         $query = "INSERT INTO tb_hr_work_io (workdate, p_id, workin, latitude, longitude, ip_address, mac_address, annotation, mac_matches, w_status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $conn->prepare($query);
         $result = $stmt->execute([$workdate, $p_id, $workin, $latitude, $longitude, $ip_address, $mac_address, $annotation, $mac_matches, $w_status]);
-
-        if ($result) {
-            // Fetch p_name, workin, and workdate based on p_id
+        
+        if ($result) {      
+            
             $selectQuery = "SELECT p_name FROM tb_hr_profile WHERE p_id = ?";
             $selectStmt = $conn->prepare($selectQuery);
             $selectStmt->execute([$p_id]);
             $profileData = $selectStmt->fetch(PDO::FETCH_ASSOC);
+    
+            $str = "ลงเวลาเข้า\nชื่อ: " . $profileData['p_name'] . "\nเวลาเข้า: " . $workin . "\nวันที่: " . $workdate;
+            $res = notify_message($str, $token);
 
-            if ($profileData) {
-                $str = "ลงเวลาเข้า\nชื่อ: " . $profileData['p_name'] . "\nเวลาเข้า: " . $workin . "\nวันที่: " . $workdate;
-                $res = notify_message($str, $token);
-                print_r($res);
-
-                // Display success alert and redirect
-                echo "<script type='text/javascript'>";
-                echo "alert('บันทึกข้อมูลสำเร็จ');";
-                echo "window.location = 'service.php'; ";
-                echo "</script>";
-            } else {
-                throw new Exception("Error fetching profile data.");
-            }
+            
+                $response['status'] = 'success';
+                $response['message'] = 'บันทึกข้อมูลสำเร็จ' ;
+                $response['redirect'] = 'service.php';
+                echo json_encode($response);
+     
         } else {
-            throw new Exception("Error executing SQL query.");
+            throw new Exception("การดำเนินการคิวรี SQL ล้มเหลว.");
         }
     } catch (Exception $e) {
-        // Display error alert and redirect
-        echo "<script type='text/javascript'>";
-        echo "alert('Error: " . $e->getMessage() . "');";
-        echo "window.location = 'service.php'; ";
-        echo "</script>";
+        $response['message'] = 'Error: ' . $e->getMessage();
+        echo json_encode($response);
     }
-} elseif (isset($_POST["workout"])) {
+} else if (isset($_POST["workout"])) {
+    // จัดการตรวจสอบเวลาออกที่นี่
     try {
         $workdate = date('Y-m-d');
         $p_id = $_POST["p_id"];
-        $workout = $_POST["workout"]; // Add this line to initialize $workout
+        $workout = $_POST["workout"];
 
-        // Retrieve the check-in time ($workin) from the database
+        // ดึงข้อมูลเวลาเข้า (workin) จากฐานข้อมูล
         $selectCheckinQuery = "SELECT workin FROM tb_hr_work_io WHERE p_id = ? AND workdate = ?";
         $selectCheckinStmt = $conn->prepare($selectCheckinQuery);
         $selectCheckinStmt->execute([$p_id, $workdate]);
@@ -133,52 +124,41 @@ if (isset($_POST["workin"])) {
         if ($checkinData) {
             $workin = $checkinData['workin'];
         } else {
-            // Handle the case where check-in time is not found
-            throw new Exception("Check-in time not found.");
+            // จัดการกรณีที่ไม่พบเวลาเข้า
+            throw new Exception("ไม่พบเวลาเข้า.");
         }
 
-        // Update tb_hr_work_io for workout
+        // อัปเดต tb_hr_work_io สำหรับเวลาออก
         $query = "UPDATE tb_hr_work_io SET workout = ? WHERE p_id = ? AND workdate = ?";
         $stmt = $conn->prepare($query);
         $result = $stmt->execute([$workout, $p_id, $workdate]);
 
+        // ดึงข้อมูลชื่อผู้ใช้จาก tb_hr_profile
         $selectQuery = "SELECT p_name FROM tb_hr_profile WHERE p_id = ?";
         $selectStmt = $conn->prepare($selectQuery);
         $selectStmt->execute([$p_id]);
         $profileData = $selectStmt->fetch(PDO::FETCH_ASSOC);
 
         if ($result) {
-            //$strWorkout = "ลงเวลาออก\nชื่อ: " . $profileData['p_name'] . "\nเวลาเข้า: " . $workin . "\nเวลาออก: " . $workout . "\nวันที่: " . $workdate;
-            //$resWorkout = notify_message($strWorkout, $token);
-           // print_r($resWorkout);
-            
-            // Display success alert and redirect
-            echo "<script type='text/javascript'>";
-            echo "alert('บันทึกข้อมูลสำเร็จ');";
-            echo "window.location = 'service.php'; ";
-            echo "</script>";
+            $response['status'] = 'success';
+            $response['message'] = 'บันทึกข้อมูลสำเร็จ';
+            $response['redirect'] = 'service.php';
+            echo json_encode($response);
         } else {
-            throw new Exception("Error executing SQL query.");
+            throw new Exception("การดำเนินการคิวรี SQL ล้มเหลว.");
         }
     } catch (Exception $e) {
-        // Display error alert and redirect
-        echo "<script type='text/javascript'>";
-        echo "alert('Error: " . $e->getMessage() . "');";
-        echo "window.location = 'service.php'; ";
-        echo "</script>";
+        $response['message'] = 'Error: ' . $e->getMessage();
+        echo json_encode($response);
     }
-}
- else {
-    // Display alert if time in/out already recorded for the day
-    echo "<script type='text/javascript'>";
-    echo "alert('คุณได้บันทึกเวลาเข้า-ออกงานวันนี้เรียบร้อยแล้ว');";
-    echo "window.location = 'service.php'; ";
-    echo "</script>";
+} else {
+    $response['message'] = 'คุณได้บันทึกเวลาเข้า-ออกงานวันนี้เรียบร้อยแล้ว';
+    echo json_encode($response);
 }
 
 function calculateHaversineDistance($lat1, $lon1, $lat2, $lon2)
 {
-    // Haversine formula to calculate distance
+    // สูตร Haversine ในการคำนวณระยะทาง
     $R = 6371000;
     $lat1Rad = deg2rad($lat1);
     $lon1Rad = deg2rad($lon1);
