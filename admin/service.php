@@ -38,6 +38,7 @@ try {
 <html lang="en">
 
 <head>
+<title>รายการอนุมัติ</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
@@ -130,19 +131,6 @@ try {
             </div>
         </section>
 
-        <section class="dashboard-section text-center">
-            <div class="container">
-                <div class="row">
-                    <div class="col-md-12">
-                        <h5>ประวัติปรับปรุงเวลา</h5>
-                        <img class="img" src="img/work.png" style="width: 80px; height: 80px; margin: 0 auto;">
-                        <a href="service_admin2.php" class="total-requests green-button">
-                        ดูรายการ
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </section>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>

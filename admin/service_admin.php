@@ -69,7 +69,9 @@ $prevPage = $page - 1;
 <html lang="en">
 
 <head>
-    <style>
+<title>รายการมาสาย</title>
+
+<style>
         body {
             height: 100vh;
             margin: 0;
@@ -79,6 +81,48 @@ $prevPage = $page - 1;
 
         .wrapper {
             flex: 1;
+        }
+
+        .mt-30 {
+            margin-top: 30px;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+
+        .pagination li {
+            margin-right: 10px;
+        }
+
+        .gray-bg {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .form-row {
+            margin-top: 20px;
+        }
+
+        .form-row label {
+            margin-bottom: 0;
+        }
+
+        .form-row .col {
+            padding-right: 10px;
+        }
+
+        .form-row .btn {
+            margin-top: 7px;
+        }
+
+        table {
+            margin-top: 20px;
         }
     </style>
 </head>
@@ -219,7 +263,7 @@ $prevPage = $page - 1;
                         w_id: workId
                     },
                     success: function (response) {
-                        handleSuccess("Status, w_status, and annotation updated successfully!");
+                        handleSuccess("ปรับเปลี่ยนเวลาสำเร็จ");
                     },
                     error: function (xhr, status, error) {
                         handleError("Error removing annotation: " + error);

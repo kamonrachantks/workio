@@ -63,9 +63,9 @@ if (!$result_mac_check) {
 // Fetch MAC address existence
 $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
 
-// Get start and end dates from query parameters
-$startDate = isset($_GET['startDate']) ? $_GET['startDate'] : date('Y-m-d');
-$endDate = isset($_GET['endDate']) ? $_GET['endDate'] : date('Y-m-d');
+// Get start and end dates from query parameters, or use current month by default
+$startDate = isset($_GET['startDate']) ? $_GET['startDate'] : date('Y-m-01');
+$endDate = isset($_GET['endDate']) ? $_GET['endDate'] : date('Y-m-t');
 
 // Query to retrieve work records within the specified date range
 $querylist = "SELECT * FROM tb_hr_work_io WHERE p_id = ? AND workdate BETWEEN ? AND ? ORDER BY workdate DESC";
@@ -77,6 +77,7 @@ $resultlist->execute([$u_id, $startDate, $endDate]);
 <html lang="en">
 
 <head>
+<title>ตารางลงเวลา</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
@@ -137,13 +138,12 @@ $resultlist->execute([$u_id, $startDate, $endDate]);
     </style>
 </head>
 
+<?php include_once('header.php'); ?>
+
+
+
 <body class="sub_page">
     <div class="wrapper">
-        <div class="hero_area">
-            <!-- Header Section -->
-            <?php include_once('header.php'); ?>
-            <!-- End Header Section -->
-        </div>
         <div class="container mt-6">
             <h5 class="text-center mt-4">ตารางลงเวลา <?php echo $rowm['p_name']; ?></h5>
             <div class="form-row justify-content mt-3">
@@ -189,18 +189,25 @@ $resultlist->execute([$u_id, $startDate, $endDate]);
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js" integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        $(document).ready(function () {
-            // Add an event listener to the filter button
-            $('#filterBtn').on('click', function () {
-                // Get the selected start and end dates
-                var startDate = $('#startDate').val();
-                var endDate = $('#endDate').val();
+    $(document).ready(function () {
+        // Add an event listener to the filter button
+        $('#filterBtn').on('click', function () {
+            // Get the selected start and end dates
+            var startDate = $('#startDate').val();
+            var endDate = $('#endDate').val();
 
+            // Check if both start and end dates are empty
+            if (!startDate && !endDate) {
+                // Redirect to the same page without any date parameters
+                window.location.href = 'service02.php';
+            } else {
                 // Redirect to the same page with the selected date range as query parameters
                 window.location.href = 'service02.php?startDate=' + startDate + '&endDate=' + endDate;
-            });
+            }
         });
-    </script>
+    });
+</script>
+
 </body>
 
 <?php include_once('footer.php'); ?>

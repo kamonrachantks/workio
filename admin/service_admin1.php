@@ -1,40 +1,47 @@
 <?php
+// Include necessary files
 include 'class/class.scdb.php';
 include 'sqlsrv_connect.php';
 
-$u_id = $_SESSION['p_id'];
-$query = new SCDB();
-
-// Redirect to the login page if session variables are not set
+// Check if user is logged in
 if ((!isset($_SESSION['USER_NO'])) || ($_SESSION['USER_NO'] == '')) {
     header("location: login.php");
     exit();
 }
 
-// Add this code before preparing the SQL statement
-$searchCondition = "";
-$searchTerm = ""; // Initialize $searchTerm variable
+// Create SCDB instance
+$query = new SCDB();
 
+// Initialize search variables
+$searchCondition = "";
+$searchTerm = "";
+$startDate = "";
+$endDate = "";
+
+// Check if the search term is set
 if (isset($_POST['search']) && !empty($_POST['search'])) {
     $searchTerm = $_POST['search'];
-    $searchCondition .= " AND p.p_id = :searchTerm";
+    $searchCondition .= " AND (p.p_id = :searchTerm OR p.p_name LIKE :searchTerm)";
 }
 
-// Add date search condition
+// Initialize date search variables
 $dateSearchCondition = "";
-$dateSearchTerm = "";
-if (isset($_POST['date_search']) && !empty($_POST['date_search'])) {
-    $dateSearchTerm = date('Y-m-d', strtotime($_POST['date_search'])); // Convert to 'Y-m-d' format
-    $dateSearchCondition .= " AND w.workdate = :dateSearchTerm";
+
+// Check if start and end dates are set
+if (isset($_POST['startDate']) && isset($_POST['endDate'])) {
+    $startDate = $_POST['startDate'];
+    $endDate = $_POST['endDate'];
+    $dateSearchCondition .= " AND w.workdate BETWEEN :startDate AND :endDate";
 }
 
+// Set the number of records per page and current page offset
 $recordsPerPage = 20;
 $page = isset($_GET['page']) ? intval($_GET['page']) : 1;
 $offset = ($page - 1) * $recordsPerPage;
 
-// Modify the SQL query to include the search conditions and join with tb_hr_profile
-$querylist = "SELECT w.*, p.p_name FROM tb_hr_work_io w
-              JOIN tb_hr_profile p ON w.p_id = p.p_id
+// SQL query to retrieve data with search conditions
+$querylist = "SELECT w.*, p.p_name FROM tb_hr_profile p
+              JOIN tb_hr_work_io w ON w.p_id = p.p_id
               WHERE 1=1 $searchCondition $dateSearchCondition
               ORDER BY w.workdate DESC
               OFFSET :offset ROWS
@@ -43,14 +50,15 @@ $stmtList = $conn->prepare($querylist);
 $stmtList->bindParam(':offset', $offset, PDO::PARAM_INT);
 $stmtList->bindParam(':recordsPerPage', $recordsPerPage, PDO::PARAM_INT);
 
-// Bind the search term parameters if they exist
+// Bind search term parameter if it exists
 if (!empty($searchTerm)) {
-    $stmtList->bindParam(':searchTerm', $searchTerm, PDO::PARAM_INT);
+    $stmtList->bindValue(':searchTerm', $searchTerm, PDO::PARAM_STR);
 }
 
-// Bind the date search term parameter if it exists
-if (!empty($dateSearchTerm)) {
-    $stmtList->bindParam(':dateSearchTerm', $dateSearchTerm, PDO::PARAM_STR);
+// Bind date search term parameters if they exist
+if (!empty($startDate) && !empty($endDate)) {
+    $stmtList->bindParam(':startDate', $startDate, PDO::PARAM_STR);
+    $stmtList->bindParam(':endDate', $endDate, PDO::PARAM_STR);
 }
 
 $stmtList->execute();
@@ -60,6 +68,9 @@ $stmtList->execute();
 <html lang="en">
 
 <head>
+    <?php include_once('header_admin.php'); ?>
+    <title>ประวัติบันทึกเวลา</title>
+
     <style>
         body {
             height: 100vh;
@@ -71,105 +82,149 @@ $stmtList->execute();
         .wrapper {
             flex: 1;
         }
+
+        .mt-30 {
+            margin-top: 30px;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+
+        .pagination li {
+            margin-right: 10px;
+        }
+
+        .gray-bg {
+            background-color: #f8f9fa;
+        }
+
+        .container {
+            padding: 20px;
+        }
+
+        .form-row {
+            margin-top: 20px;
+        }
+
+        .form-row label {
+            margin-bottom: 0;
+        }
+
+        .form-row .col {
+            padding-right: 10px;
+        }
+
+        .form-row .btn {
+            margin-top: 7px;
+        }
+
+        table {
+            margin-top: 20px;
+        }
     </style>
 </head>
 
 <body class="sub_page">
     <div class="wrapper">
-        <div class="hero_area">
-            <!-- Header Section -->
-            <?php include_once('header_admin.php'); ?>
-            <!-- End Header Section -->
-        </div>
-
-        <!-- About Section -->
-        <section class="about_section">
-            <div class="container">
-                <div class="row">
-                    <section class="w3l-contact-info-main col-md-12" id="contact">
-                        <div class="contact-sec">
-                            <div class="container">
-                                <div>
-                                    <div class="cont-details">
-                                        <div class="table-content table-responsive cart-table-content m-t-30">
-                                            <div style="padding-top: 30px;">
-                                                <h4 style="padding-bottom: 20px;text-align: center;color: #5c6bc0 ;">ประวัติบันทึกเวลา </h4>
-                                                <div>
-                                                    <div style="padding-top: 10px;">
-                                                        <form method="post">
-                                                            <label for="search">ค้นหา :</label>
-                                                            <input type="text" name="search" id="search" placeholder="กรอกรหัสพนักงาน">
-                                                            <label for="date_search">ค้นหาจากวันที่ :</label>
-                                                            <input type="date" name="date_search" id="date_search">
-                                                            <button type="submit" class="btn btn-primary">ค้นหา</button>
-                                                        </form>
-                                                    </div>
-                                                    <?php 
-                                                    $nextPage = $page + 1;
-                                                    $prevPage = $page - 1;
-                                                    
-                                                    echo '<div style="padding-top: 30px;">';
-                                                    echo '<table border="2" class="table">';
-                                                    echo '<thead class="gray-bg">';
-                                                    echo '<tr>';
-                                                    echo '<th>ลำดับ</th>';
-                                                    echo '<th>Id</th>';
-                                                    echo '<th>ชื่อ</th>';
-                                                    echo '<th>เวลาเข้างาน</th>';
-                                                    echo '<th>เวลาออกงาน</th>';
-                                                    echo '<th>วันที่</th>';
-                                                    echo '</tr>';
-                                                    echo '</thead>';
-                                                    echo '<tbody>';
-                                                    
-                                                    $cnt = 1;
-                                                    while ($row = $stmtList->fetch(PDO::FETCH_ASSOC)) {
-                                                        echo '<tr>';
-                                                        echo '<td>' . $cnt . '</td>';
-                                                        echo '<td>' . $row['p_id'] . '</td>';
-                                                        echo '<td>' . $row['p_name'] . '</td>';
-                                                        echo '<td><p>' . $row['workin'] . '</p></td>';
-                                                        echo '<td>' . $row['workout'] . '</td>';
-                                                        echo '<td>' . $row['workdate'] . '</td>';
-                                                        echo '</tr>';
-                                                        $cnt = $cnt + 1;
-                                                    }
-                                                    
-                                                    echo '</tbody>';
-                                                    echo '</table>';
-                                                    echo '</div>';
-                                                    
-                                                    // Display pagination links
-                                                    echo '<div style="padding-top: 10px;">';
-                                                    echo '<ul class="pagination">';
-                                                    if ($page > 1) {
-                                                        echo '<li><a href="?page=' . $prevPage . '">Previous</a></li>';
-                                                    }
-                                                    echo '<li><a href="?page=' . $nextPage . '">Next</a></li>';
-                                                    echo '</ul>';
-                                                    echo '</div>';
-                                                    ?>
-                                                    
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
+        <div class="container mt-6">
+            <h5 class="text-center mt-4">ประวัติบันทึกเวลา</h5>
+            <form method="POST" action="service_admin1.php">
+                <div class="form-row mt-3 d-flex align-items-center">
+                    <div class="col col-sm-2">
+                        <label for="startDate">ค้นหาจากวันที่ เริ่มต้น:</label>
+                        <input type="date" class="form-control" id="startDate" name="startDate" required="true">
+                    </div>
+                    <div class="col col-sm-2">
+                        <label for="endDate">สิ้นสุด:</label>
+                        <input type="date" class="form-control" id="endDate" name="endDate" required="true">
+                    </div>
+                    <div class="col col-sm-3">
+                        <button type="submit" class="btn btn-primary" id="filterBtn">ค้นหา</button>
+                    </div>
                 </div>
-            </div>
-        </section>
-        <!-- End About Section -->
+            </form>
 
-        <!-- JavaScript Dependencies -->
-        <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
-        <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
-        <script type="text/javascript" src="js/bootstrap.js"></script>
-        <script type="text/javascript" src="js/custom.js"></script>
+            <?php
+            echo '<table border="2" class="table">';
+            echo '<thead class="gray-bg">';
+            echo '<tr>';
+            echo '<th>ลำดับ</th>';
+            echo '<th>ชื่อ</th>';
+            echo '<th>เวลาเข้างาน</th>';
+            echo '<th>เวลาออกงาน</th>';
+            echo '<th>วันที่</th>';
+            echo '<th>สถานะ</th>';
+            echo '</tr>';
+            echo '</thead>';
+            echo '<tbody>';
+
+            $cnt = 1;
+            while ($row = $stmtList->fetch(PDO::FETCH_ASSOC)) {
+                echo '<tr>';
+                echo '<td>' . $cnt . '</td>';
+                echo '<td>' . $row['p_name'] . '</td>';
+                echo '<td><p>' . $row['workin'] . '</p></td>';
+                echo '<td>' . $row['workout'] . '</td>';
+                echo '<td>' . $row['workdate'] . '</td>';
+                echo '<td>';
+                echo $row['w_status'] == '2' ? 'ปรับเปลี่ยนเวลาแล้ว' : '';
+                echo $row['w_status'] == '1' ? 'สาย' : '';
+                echo $row['w_status'] == '0' ? 'ปกติ' : '';
+                echo '</td>';
+                echo '<td>';
+                echo '</td>';
+                echo '</tr>';
+                $cnt = $cnt + 1;
+            }
+
+            echo '</tbody>';
+            echo '</table>';
+            ?>
+
+            <!-- Display pagination links -->
+            <div style="padding-top: 10px;">
+                <ul class="pagination">
+                    <?php
+                    $nextPage = $page + 1;
+                    $prevPage = $page - 1;
+
+                    if ($page > 1) {
+                        echo '<li class="page-item"><a class="page-link" href="?page=' . $prevPage . '">Previous</a></li>';
+                    }
+                    echo '<li class="page-item"><a class="page-link" href="?page=' . $nextPage . '">Next</a></li>';
+                    ?>
+                </ul>
+            </div>
+        </div>
     </div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script type="text/javascript" src="js/jquery-3.4.1.min.js"></script>
+    <script type="text/javascript" src="js/bootstrap.js"></script>
+    <script type="text/javascript" src="js/custom.js"></script>
+    <script>
+        $(document).ready(function () {
+            // Add an event listener to the filter button
+            $('#filterBtn').on('click', function () {
+                // Get the selected start and end dates
+                var startDate = $('#startDate').val();
+                var endDate = $('#endDate').val();
+
+                // Check if both start and end dates are empty
+                if (!startDate && !endDate) {
+                    // Redirect to the same page without any date parameters
+                    window.location.href = 'service_admin1.php';
+                } else {
+                    // Redirect to the same page with the selected date range as query parameters
+                    window.location.href = 'service_admin1.php?startDate=' + startDate + '&endDate=' + endDate;
+                }
+            });
+        });
+    </script>
 </body>
 
 <!-- Footer Section -->

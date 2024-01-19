@@ -60,7 +60,8 @@ $stmtList->execute();
 <html lang="en">
 
 <head>
-    <style>
+<title>ประวัติปรับปรุงเวลา</title>
+<style>
         body {
             height: 100vh;
             margin: 0;
@@ -70,6 +71,28 @@ $stmtList->execute();
 
         .wrapper {
             flex: 1;
+        }
+
+        .mt-30 {
+            margin-top: 30px;
+        }
+
+        .sm-3 {
+            margin-right: 10px;
+        }
+
+        .pagination {
+            display: flex;
+            list-style: none;
+            padding: 0;
+        }
+
+        .pagination li {
+            margin-right: 10px;
+        }
+
+        .gray-bg {
+            background-color: #f8f9fa;
         }
     </style>
 </head>
@@ -105,9 +128,6 @@ $stmtList->execute();
                                                         </form>
                                                     </div>
                                                     <?php 
-                                                    $nextPage = $page + 1;
-                                                    $prevPage = $page - 1;
-                                                    
                                                     echo '<div style="padding-top: 30px;">';
                                                     echo '<table border="2" class="table">';
                                                     echo '<thead class="gray-bg">';
@@ -132,7 +152,11 @@ $stmtList->execute();
                                                         echo '<td><p>' . $row['workin'] . '</p></td>';
                                                         echo '<td>' . $row['workout'] . '</td>';
                                                         echo '<td>' . $row['workdate'] . '</td>';
-                                                        echo '<td>' . ($row['w_status'] == '2' ? 'ปรับเปลี่ยนเวลาแล้ว' : '') . '</td>';
+                                                        echo '<td>';
+                                                        echo $row['w_status'] == '2' ? 'ปรับเปลี่ยนเวลาแล้ว' : '';
+                                                        echo $row['w_status'] == '1' ? 'สาย' : '';
+                                                        echo $row['w_status'] == '0' ? 'ปกติ' : '';
+                                                        echo '</td>';
                                                         echo '<td>';
                                                         // echo '<button class="btn btn-secondary" onclick="cancelAction(' . $row['w_id'] . ')">ยกเลิก</button>';
                                                         echo '</td>';
@@ -143,17 +167,21 @@ $stmtList->execute();
                                                     echo '</tbody>';
                                                     echo '</table>';
                                                     echo '</div>';
-                                                    
-                                                    // Display pagination links
-                                                    echo '<div style="padding-top: 10px;">';
-                                                    echo '<ul class="pagination">';
-                                                    if ($page > 1) {
-                                                        echo '<li><a href="?page=' . $prevPage . '">Previous</a></li>';
-                                                    }
-                                                    echo '<li><a href="?page=' . $nextPage . '">Next</a></li>';
-                                                    echo '</ul>';
-                                                    echo '</div>';
+
                                                     ?>
+                                                                    <div style="padding-top: 10px;">
+                    <ul class="pagination">
+                        <?php
+                        $nextPage = $page + 1;
+                        $prevPage = $page - 1;
+
+                        if ($page > 1) {
+                            echo '<li class="page-item"><a class="page-link" href="?page=' . $prevPage . '">Previous</a></li>';
+                        }
+                        echo '<li class="page-item"><a class="page-link" href="?page=' . $nextPage . '">Next</a></li>';
+                        ?>
+                    </ul>
+                </div>
                                                     
                                                     </div>
                                                 </div>
