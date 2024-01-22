@@ -147,19 +147,22 @@ $mac_exists = $result_mac_check->fetch(PDO::FETCH_ASSOC);
                                 <input type="text" class="form-control" name="workin" value="<?php echo date('H:i:s');?>"
                                     readonly>
                                     <?php
-if ($timenow > '08:30:00') {
-    echo '<label for="p_id" style="font-size: 12px;">เข้างานเกินเวลา</label>';
-    echo '<input type="text" class="form-control" name="annotation" value="" placeholder="กรอกเหตุผล" style="font-size: 12px;" required>';
-    echo '<input type="hidden" class="form-control" name="w_status" value="1">';
-} else {
-    echo '<input type="hidden" class="form-control" name="w_status" value="0">';
-}
-if ($mac_exists) {
+if ($timenow < '08:30:00') {
 
 } else {
-    echo '<label for="p_id" style="font-size: 12px;">ใช่เครื่องเดียวกันคนอื่น</label>';
-    echo '<input type="text" class="form-control" name="mac_matches" value="" placeholder="กรอกเหตุผล" style="font-size: 12px;" required>';
+    echo '<input type="hidden" class="form-control" name="w_status" value="1">';
+    echo '<label for="p_id" style="font-size: 12px;">เข้างานเกินเวลา</label>';
+    echo '<input type="text" class="form-control" name="annotation" value="" placeholder="กรอกเหตุผล (หากมี)" style="font-size: 12px;" required>';
 }
+
+if ($mac_exists) {
+    echo '<input type="hidden" class="form-control" name="mac_matches" value="0">';
+    
+} else {
+    echo '<label for="p_id" style="font-size: 12px;">ใช่เครื่องเดียวกันคนอื่น</label>';
+    echo '<input type="text" class="form-control" name="mac_matches" id="mac_matches" value="" placeholder="กรอกเหตุผล (บังคับ)" style="font-size: 12px;" required>';
+}
+
 ?>
                                 <?php } ?>
                             </div>
@@ -217,40 +220,65 @@ if ($mac_exists) {
             });
 
             function submitForm() {
-                // Gather form data
-                var formData = $("#workForm").serialize();
+    // Check if required fields are filled
+    if (!validateForm()) {
+        return;
+    }
 
-                // AJAX request
-                $.ajax({
-                    type: "POST",
-                    url: "save.php",
-                    data: formData,
-                    dataType: "json",
-                    success: function (response) {
-                        if (response.status === 'success') {
-                            // Show SweetAlert2 success message
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Success',
-                                text: response.message,
-                            }).then((result) => {
-                                // Redirect if needed
-                                if (response.redirect) {
-                                    window.location.href = response.redirect;
-                                }
-                            });
-                        } else {
-                            // Show SweetAlert2 error message
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error',
-                                text: response.message,
-                            });
-                        }
-                    },
+    // Gather form data
+    var formData = $("#workForm").serialize();
+
+    // AJAX request
+    $.ajax({
+        type: "POST",
+        url: "save.php",
+        data: formData,
+        dataType: "json",
+        success: function (response) {
+            if (response.status === 'success') {
+                // Show SweetAlert2 success message
+                Swal.fire({
+                    icon: 'success',
+                    title: 'Success',
+                    text: response.message,
+                }).then((result) => {
+                    // Redirect if needed
+                    if (response.redirect) {
+                        window.location.href = response.redirect;
+                    }
+                });
+            } else {
+                // Show SweetAlert2 error message
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: response.message,
                 });
             }
+        },
+    });
+}
+
+function validateForm() {
+    var isValid = true;
+
+    // Check if required fields are filled
+    if ($('#mac_matches:required').val() === '') {
+        isValid = false;
+        Swal.fire({
+            icon: 'error',
+            title: 'ลงเวลาเข้าไม่สำเร็จ',
+            text: 'กรุณากรอกเหตุผลในช่อง (บังคับ)',
+        });
+    }
+
+    // Add similar checks for other required fields
+
+    return isValid;
+}
+
         </script>
+        
     </div>
 </body>
 

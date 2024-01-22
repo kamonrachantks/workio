@@ -171,4 +171,6 @@ function calculateHaversineDistance($lat1, $lon1, $lat2, $lon2)
     $distance = $R * $c;
     return $distance;
 }
+
+
 ?>
