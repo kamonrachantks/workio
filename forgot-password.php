@@ -1,40 +1,40 @@
 <?php
+// Include necessary files and start the session
 @session_start();
 include 'class/class.scdb.php';
-
 $query = new SCDB();
 $mode = $_GET['Action'] ?? '';
 
-if ($mode == "chklogin") {
-    $user_no = $_POST['txtuser'] ?? '';
-    $user_pw = $_POST['txtpass'] ?? '';
+// Check if the form is submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Get user input from the form
+    $p_cid = isset($_POST['p_cid']) ? $_POST['p_cid'] : '';
+    $p_tel = isset($_POST['p_tel']) ? $_POST['p_tel'] : '';
 
-    $params = array($user_no);
-    $result = $query->fetch("SELECT p_id, u_user, u_pass, u_status FROM tb_hr_user_io WHERE u_user = ?", $params);
-
-    if (is_array($result) && count($result) > 0) {
-        $hashed_password = $result['u_pass'];
-
-        if (password_verify($user_pw, $hashed_password)) {
-            $user = $result['u_user'];
-            $p_id = $result['p_id'];
-            $u_status = $result['u_status'];
-            $_SESSION['USER_NO'] = $user;
-            $_SESSION['p_id'] = $p_id;
-
-            if ($u_status == 1) {
-                $response = array('success' => true, 'redirect' => 'admin/index.php');
-            } elseif ($u_status == 0) {
-                $response = array('success' => true, 'redirect' => 'service.php');
-            }
-        } else {
-            $response = array('success' => false, 'message' => 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
-        }
+    // Validate input (add more validation as needed)
+    if (empty($p_cid) || empty($p_tel)) {
+        $response = array('success' => false, 'message' => 'กรุณากรอกข้อมูลทุกช่อง');
     } else {
-        $response = array('success' => false, 'message' => 'ชื่อผู้ใช้งานหรือรหัสผ่านไม่ถูกต้อง');
+        // Check if the provided p_cid and p_tel match an entry in tb_hr_profile
+        $profileParams = array($p_cid, $p_tel);
+        $profileResult = $query->execute("SELECT p_id FROM tb_hr_profile WHERE p_cid = ? AND p_tel = ?", $profileParams);
+
+        // Fetch the result as an associative array
+        $profileData = $profileResult->fetch(PDO::FETCH_ASSOC);
+
+        // Check if a matching profile is found
+        if ($profileData) {
+            // If the profile is found, redirect to the page for creating a new password
+            $_SESSION['p_cid'] = $p_cid;
+            $_SESSION['p_tel'] = $p_tel;
+
+            $response = array('success' => true, 'redirect' => 'create_new_password.php');
+        } else {
+            $response = array('success' => false, 'message' => 'ข้อมูลไม่ถูกต้อง');
+        }
     }
 
-    // Send the JSON response to the AJAX request
+    // Send JSON response
     header('Content-Type: application/json');
     echo json_encode($response);
     exit();
@@ -45,7 +45,7 @@ if ($mode == "chklogin") {
 <html lang="en">
 
 <head>
-    <title>ระบบบันทึกเวลาการทำงาน</title>
+    <title>ลืมรหัสผ่าน</title>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="icon" type="image/png" href="images/icons/favicon.ico" />
@@ -68,39 +68,41 @@ if ($mode == "chklogin") {
                     <img src="images/koratcoop.png" alt="IMG">
                 </div>
 
-                <form class="login100-form validate-form" method="post" action="?Action=chklogin" id="loginForm">
+                <form class="login100-form validate-form" method="post" action="?Action=forgotPassword" id="forgotPasswordForm">
                     <span class="login100-form-title">
-                        ระบบบันทึกเวลาการทำงาน
+                        ลืมรหัสผ่าน
                     </span>
 
-                    <div class="wrap-input100 validate-input" data-validate="Valid email is required: ex@abc.xyz">
-                        <input class="input100" type="text" name="txtuser" placeholder="ชื่อผู้ใช้" id="txtuser" oninput="this.value = this.value.replace(/(\..*)\./g, '$1');" onKeyDown="if(this.value.length==10 && event.keyCode!=11 && event.keyCode!=12) return false;" required="true">
+                    <?php if (isset($error)) : ?>
+                        <p class="error-message"><?php echo $error; ?></p>
+                    <?php endif; ?>
+
+                    <div class="wrap-input100 validate-input" data-validate="เลขบัตรประชาชน is required">
+                        <input class="input100" type="text" name="p_cid" placeholder="เลขบัตรประชาชน" aria-describedby="basic-addon1" id="p_cid" required="true">
                         <span class="focus-input100"></span>
                         <span class="symbol-input100">
-                          <i class="fa fa-user" aria-hidden="true"></i>
+                            <i class="fa fa-id-card" aria-hidden="true"></i>
                         </span>
                     </div>
 
-                    <div class="wrap-input100 validate-input" data-validate="Password is required">
-                        <input class="input100" type="password" name="txtpass" placeholder="รหัสผ่าน" aria-describedby="basic-addon1" id="txtpass" required="true">
+                    <div class="wrap-input100 validate-input" data-validate="เบอร์โทรศัพท์ is required">
+                        <input class="input100" type="text" name="p_tel" placeholder="เบอร์โทรศัพท์" aria-describedby="basic-addon1" id="p_tel" required="true">
                         <span class="focus-input100"></span>
                         <span class="symbol-input100">
-                            <i class="fa fa-lock" aria-hidden="true"></i>
+                            <i class="fa fa-phone" aria-hidden="true"></i>
                         </span>
                     </div>
 
                     <div class="container-login100-form-btn">
                         <button class="login100-form-btn">
-                            เข้าสู่ระบบ
+                            ตรวจสอบข้อมูล
                         </button>
                     </div>
 
                     <div class="text-center p-t-20">
-                    <a href="register.php" class="nav-item nav-link ">ลงทะเบียน</a>
-                    <a href="forgot-password.php" class="nav-item nav-link ">ลืมรหัสผ่าน</a>
+                        <a href="index.php" class="nav-item nav-link ">หน้าเข้าสู่ระบบ</a>
                     </div>
                 </form>
-                
             </div>
         </div>
     </div>
@@ -113,22 +115,24 @@ if ($mode == "chklogin") {
     <script>
         $('.js-tilt').tilt({
             scale: 1.1
-        })
+        });
     </script>
 
+    <script src="js/main.js"></script>
+
     <script>
-        $(document).ready(function() {
-            $('#loginForm').submit(function(e) {
+        $(document).ready(function () {
+            $('#forgotPasswordForm').submit(function (e) {
                 e.preventDefault();
 
                 $.ajax({
                     type: $(this).attr('method'),
                     url: $(this).attr('action'),
                     data: $(this).serialize(),
-                    success: function(response) {
+                    success: function (response) {
                         if (response.success) {
                             Swal.fire({
-                                title: 'เข้าสู่ระบบสำเร็จ',
+                                title: 'ข้อมูลถูกต้อง',
                                 text: 'กำลังเปลี่ยนเส้นทาง...',
                                 icon: 'success',
                                 timer: 1000,
@@ -139,7 +143,7 @@ if ($mode == "chklogin") {
                             });
                         } else {
                             Swal.fire({
-                                title: 'เข้าสู่ระบบไม่สำเร็จ',
+                                title: 'ข้อมูลไม่ถูกต้อง',
                                 text: response.message,
                                 icon: 'error',
                                 showConfirmButton: true
@@ -150,8 +154,6 @@ if ($mode == "chklogin") {
             });
         });
     </script>
-
-    <script src="js/main.js"></script>
 </body>
 
 </html>
