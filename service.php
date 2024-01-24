@@ -170,7 +170,7 @@ if ($mac_exists) {
                             <div class="col col-sm-4">
                                 <label for="p_id">เวลาออกงาน</label>
                                 <?php
-                                    if($timenow > '09:30:00'){
+                                    if($timenow > '16:30:00'){
                                         if(isset($rowio['workout'])){ ?>
                                 <input type="text" class="form-control" name="workout" value="<?php echo $rowio['workout'];?>"
                                     disabled>
