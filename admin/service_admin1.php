@@ -18,12 +18,6 @@ $searchTerm = "";
 $startDate = "";
 $endDate = "";
 
-// Check if the search term is set
-if (isset($_POST['search']) && !empty($_POST['search'])) {
-    $searchTerm = $_POST['search'];
-    $searchCondition .= " AND (p.p_id = :searchTerm OR p.p_name LIKE :searchTerm)";
-}
-
 // Initialize date search variables
 $dateSearchCondition = "";
 

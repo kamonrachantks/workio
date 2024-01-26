@@ -100,9 +100,9 @@ if ($mode == "chklogin") {
 						<a class="txt2" href="#">
 							Username / Password?
 						</a>
-					</div>
-
-					<div class="text-center p-t-136">
+						<a class="txt2" href="#">
+							Username / Password?
+						</a>
 					</div>
 				</form>
 			</div>

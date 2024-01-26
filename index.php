@@ -96,8 +96,11 @@ if ($mode == "chklogin") {
                     </div>
 
                     <div class="text-center p-t-20">
-                    <a href="register.php" class="nav-item nav-link ">ลงทะเบียน</a>
-                    <a href="forgot-password.php" class="nav-item nav-link ">ลืมรหัสผ่าน</a>
+                    <a href="register.php" >ลงทะเบียน</a>
+                    <span class="txt1">
+							/
+						</span>
+                    <a href="forgot-password.php">ลืมรหัสผ่าน</a>
                     </div>
                 </form>
                 
