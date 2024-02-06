@@ -2,8 +2,9 @@
 // Include necessary files and start the session
 @session_start();
 include 'class/class.scdb.php';
+
+// Create an instance of SCDB class
 $query = new SCDB();
-$mode = $_GET['Action'] ?? '';
 
 // Check if the form is submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -33,11 +34,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($profileData) {
             $pId = $profileData['p_id'];
 
-            // Perform the registration and store the hashed password, p_id, and u_status in the database
-            $userParams = array($username, $hashedPassword, $pId, 0);
-            $query->execute("INSERT INTO tb_hr_user_io (u_user, u_pass, p_id, u_status) VALUES (?, ?, ?, ?)", $userParams);
+            // Check if the user with the specified p_id already exists in tb_hr_user_io
+            $userExistsParams = array($pId);
+            $userExistsResult = $query->execute("SELECT u_user FROM tb_hr_user_io WHERE p_id = ?", $userExistsParams);
 
-            $response = array('success' => true, 'redirect' => 'index.php');
+            // Fetch the result as an associative array
+            $userExistsData = $userExistsResult->fetch(PDO::FETCH_ASSOC);
+
+            // Check if a matching user is found
+            if ($userExistsData) {
+                $response = array('success' => false, 'message' => 'ผู้ใช้นี้มีการลงทะเบียนแล้ว');
+            } else {
+                // Perform the registration and store the hashed password, p_id, and u_status in the database
+                $userParams = array($username, $hashedPassword, $pId, 0);
+                $query->execute("INSERT INTO tb_hr_user_io (u_user, u_pass, p_id, u_status) VALUES (?, ?, ?, ?)", $userParams);
+
+                $response = array('success' => true, 'redirect' => 'index.php');
+            }
         } else {
             $response = array('success' => false, 'message' => 'ไม่พบข้อมูลที่เชื่อมโยงกับเลขบัตรประชาชนนี้');
         }

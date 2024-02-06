@@ -1,7 +1,10 @@
 <?php
 // Include necessary files and start session
-include 'sqlsrv_connect.php';
+@session_start();
+include 'class/class.scdb.php';
 
+// Create an instance of SCDB class
+$conn = new SCDB();
 // Redirect to index.php if USER_NO is not set or empty
 if (!isset($_SESSION['USER_NO']) || empty($_SESSION['USER_NO'])) {
     header("location: index.php");

@@ -1,10 +1,5 @@
 <?php
-session_start();
-
-$serverName = "LAPTOP-FIIPHBAB";
-$uid = "";  // แทนที่ด้วยชื่อผู้ใช้ SQL Server ของคุณ
-$pwd = "";  // แทนที่ด้วยรหัสผ่าน SQL Server ของคุณ
-$DB = "Domc_TEST";
+include 'sqlsrv_connect.php';
 
 define('LINE_API', "https://notify-api.line.me/api/notify");
 

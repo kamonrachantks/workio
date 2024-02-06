@@ -1,6 +1,9 @@
 <?php
-include 'sqlsrv_connect.php';
+@session_start();
+include 'class/class.scdb.php';
 
+// Create an instance of SCDB class
+$conn = new SCDB();
 $u_id = $_SESSION['p_id'];
 
 $queryemp = "SELECT * FROM tb_hr_profile WHERE p_id=?";
